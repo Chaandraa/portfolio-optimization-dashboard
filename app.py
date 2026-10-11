@@ -7,12 +7,27 @@ import sqlite3  # Added to manage database interactions
 from scipy.optimize import minimize
 
 import os
-# Check if the database file is missing (which happens on a fresh cloud deployment)
-if not os.path.exists('portfolio.db'):
-    import subprocess
+import sqlite3
+
+# This checks if the file doesn't exist OR if the database exists but is completely empty/broken
+db_is_empty = True
+if os.path.exists('portfolio.db'):
+    try:
+        conn = sqlite3.connect('portfolio.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='historical_prices';")
+        if cursor.fetchone():
+            db_is_empty = False
+        conn.close()
+    except:
+        db_is_empty = True
+
+if db_is_empty:
     st.info("First-time boot setup: Running ETL data pipeline to initialize SQLite...")
-    # This executes your ETL script behind the scenes to fetch data and seed the DB
-    subprocess.run(["python", "init_db.py"])
+    # Executing the code contents directly instead of a separate subprocess prevents path routing errors on Streamlit Cloud!
+    with open("init_db.py") as f:
+        exec(f.read())
+
 
 
 st.set_page_config(page_title="Portfolio Lab", page_icon="📈", layout="wide")
