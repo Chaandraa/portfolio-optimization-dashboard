@@ -6,6 +6,15 @@ import streamlit as st
 import sqlite3  # Added to manage database interactions
 from scipy.optimize import minimize
 
+import os
+# Check if the database file is missing (which happens on a fresh cloud deployment)
+if not os.path.exists('portfolio.db'):
+    import subprocess
+    st.info("First-time boot setup: Running ETL data pipeline to initialize SQLite...")
+    # This executes your ETL script behind the scenes to fetch data and seed the DB
+    subprocess.run(["python", "init_db.py"])
+
+
 st.set_page_config(page_title="Portfolio Lab", page_icon="📈", layout="wide")
 st.title("📈 Portfolio Lab")
 st.caption("Modern Portfolio Theory • Risk-return analysis • Efficient frontier")
